@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CO Headwaters Report — River Conditions for Guides</title>
+    <meta name="description" content="Real-time river flows, water temps, webcams, and weather for Eagle River, Upper Colorado, Roaring Fork, Colorado River, and Yampa River near Vail, CO.">
+    <style>
+        :root {
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --primary: #1a3a5c;
+            --accent: #2e86ab;
+            --accent-light: #e8f4f8;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --green: #16a34a;
+            --red: #dc2626;
+            --orange: #ea580c;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #0f2b46 0%, #1a4a6e 50%, #1e5a7e 100%);
+            color: white;
+            padding: 20px 16px 16px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .header .subtitle {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+        .header .last-updated {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        /* RIVER NAV TABS */
+        .river-nav {
+            display: flex;
+            overflow-x: auto;
+            gap: 6px;
+            padding: 10px 16px;
+            background: #0d2237;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .river-nav::-webkit-scrollbar { display: none; }
+        .river-nav a {
+            flex-shrink: 0;
+            padding: 10px 18px;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.85);
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .river-nav a:hover, .river-nav a.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* MAIN CONTENT */
+        .content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 12px;
+        }
+
+        /* RIVER SECTION */
+        .river-section {
+            margin-bottom: 16px;
+            scroll-margin-top: 120px;
+        }
+        .river-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        .river-icon { font-size: 1.6rem; }
+        .river-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .river-header .region {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        /* DATA GRID */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+        }
+        .data-card {
+            background: var(--card);
+            padding: 18px 16px;
+            text-align: center;
+        }
+        .data-card.full-width {
+            grid-column: 1 / -1;
+        }
+        .data-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .data-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.1;
+        }
+        .data-value .unit {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .data-value .trend {
+            font-size: 0.85rem;
+            margin-left: 4px;
+        }
+        .trend-up { color: var(--green); }
+        .trend-down { color: var(--red); }
+        .trend-stable { color: var(--text-muted); }
+        .data-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* WEATHER BAR */
+        .weather-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+        }
+        .weather-item {
+            background: var(--accent-light);
+            padding: 10px 12px;
+            text-align: center;
+        }
+        .weather-item .wx-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .weather-item .wx-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .weather-item .wx-detail {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        /* WEBCAM SECTION */
+        .webcam-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card);
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+        }
+        .webcam-bar .cam-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .webcam-bar a {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 12px;
+            background: var(--accent);
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .webcam-bar a:hover { background: #256d8e; }
+
+        /* GAUGE LINK */
+        .gauge-link {
+            display: block;
+            background: var(--card);
+            padding: 8px 16px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 var(--radius) var(--radius);
+            font-size: 0.7rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .gauge-link:hover { background: var(--accent-light); }
+
+        /* MULTI-GAUGE */
+        .gauge-tabs {
+            display: flex;
+            gap: 1px;
+            background: var(--border);
+        }
+        .gauge-tab {
+            flex: 1;
+            padding: 6px;
+            text-align: center;
+            font-size: 0.68rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--card);
+            border: none;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .gauge-tab.active {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* LOADING / ERROR */
+        .loading {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+        .loading::after {
+            content: '';
+            animation: dots 1.5s steps(3, end) infinite;
+        }
+        @keyframes dots {
+            0% { content: ''; }
+            33% { content: '.'; }
+            66% { content: '..'; }
+            100% { content: '...'; }
+        }
+        .error-msg {
+            color: var(--orange);
+            font-size: 0.8rem;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 20px 16px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .footer a { color: var(--accent); }
+
+        /* MOBILE-FIRST: phones (default) */
+        @media (max-width: 420px) {
+            .header h1 { font-size: 1.2rem; }
+            .river-header h2 { font-size: 1.3rem; }
+            .river-header .region { font-size: 0.85rem; }
+            .data-value { font-size: 2.2rem; }
+            .river-nav a { padding: 8px 16px; font-size: 0.85rem; }
+            .weather-bar { grid-template-columns: repeat(3, 1fr); }
+            .weather-item { padding: 10px 6px; }
+            .webcam-bar { flex-wrap: wrap; gap: 8px; }
+            .webcam-bar a { width: 100%; text-align: center; padding: 10px; font-size: 0.85rem; }
+            .multi-gauge .gauge-group { padding: 14px 8px; }
+            .multi-gauge .gauge-group .data-value { font-size: 1.8rem; }
+            .gauge-link { padding: 12px 16px; font-size: 0.8rem; }
+        }
+
+        /* RESPONSIVE: tablets and up */
+        @media (min-width: 600px) {
+            .content { padding: 20px; }
+            .river-section { margin-bottom: 24px; }
+            .data-value { font-size: 2.6rem; }
+            .weather-bar { grid-template-columns: repeat(4, 1fr); }
+            .river-header h2 { font-size: 1.6rem; }
+        }
+
+        /* STATUS DOT */
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .status-dot.live { background: var(--green); animation: pulse 2s infinite; }
+        .status-dot.error { background: var(--orange); }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* MULTIPLE GAUGES DISPLAY */
+        .multi-gauge {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+        }
+        .multi-gauge .gauge-group {
+            background: var(--card);
+            padding: 12px;
+            text-align: center;
+        }
+        .multi-gauge .gauge-group .gauge-name {
+            font-size: 0.65rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        /* REFRESH BUTTON */
+        .refresh-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.8);
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        .refresh-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>CO HEADWATERS REPORT</h1>
+    <div class="subtitle">Real-Time River Conditions — Central Colorado</div>
+    <div class="last-updated" id="lastUpdated">Loading data...</div>
+    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+</div>
+
+<nav class="river-nav" id="riverNav">
+    <a href="#eagle">Eagle River</a>
+    <a href="#upper-co">Upper Colorado</a>
+    <a href="#co-glenwood">CO River — Glenwood</a>
+    <a href="#roaring-fork">Roaring Fork</a>
+    <a href="#yampa">Yampa River</a>
+</nav>
+
+<main class="content">
+
+    <!-- EAGLE RIVER -->
+    <section class="river-section" id="eagle">
+        <div class="river-header">
+            <span class="river-icon">🏔️</span>
+            <div>
+                <h2>Eagle River</h2>
+                <span class="region">Avon / Edwards / Gypsum</span>
+            </div>
+        </div>
+        <div class="weather-bar" id="weather-eagle">
+            <div class="weather-item"><div class="wx-label">Now</div><div class="wx-value" id="wx-eagle-temp">—</div></div>
+            <div class="weather-item"><div class="wx-label">Wind</div><div class="wx-value" id="wx-eagle-wind">—</div></div>
+            <div class="weather-item"><div class="wx-label">Precip</div><div class="wx-value" id="wx-eagle-precip">—</div></div>
+        </div>
+        <div class="multi-gauge">
+            <div class="gauge-group">
+                <div class="gauge-name">Avon / Edwards</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09067020"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09067020"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Below Gypsum</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09070000"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09070000"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Avon / Edwards</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09067020"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09067020"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Below Gypsum</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09070000"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09070000"></div>
+            </div>
+        </div>
+        <div class="webcam-bar">
+            <span class="cam-label">📷 CDOT I-70 at Dowd Junction</span>
+            <a href="https://www.cotrip.org/map#/camera?camera=10347&zoom=15" target="_blank">View Cam ↗</a>
+        </div>
+        <div style="display:flex; gap:1px; background:var(--border);">
+            <a class="gauge-link" style="flex:1; border-radius:0 0 0 var(--radius);" href="https://waterdata.usgs.gov/monitoring-location/09067020/" target="_blank">
+                <span class="status-dot live"></span> 09067020 — Avon
+            </a>
+            <a class="gauge-link" style="flex:1; border-radius:0 0 var(--radius) 0;" href="https://waterdata.usgs.gov/monitoring-location/09070000/" target="_blank">
+                <span class="status-dot live"></span> 09070000 — Gypsum
+            </a>
+        </div>
+    </section>
+
+    <!-- UPPER COLORADO -->
+    <section class="river-section" id="upper-co">
+        <div class="river-header">
+            <span class="river-icon">🌊</span>
+            <div>
+                <h2>Upper Colorado River</h2>
+                <span class="region">Kremmling / Pumphouse → State Bridge / Catamount</span>
+            </div>
+        </div>
+        <div class="weather-bar" id="weather-upper-co">
+            <div class="weather-item"><div class="wx-label">Now</div><div class="wx-value" id="wx-upper-co-temp">—</div></div>
+            <div class="weather-item"><div class="wx-label">Wind</div><div class="wx-value" id="wx-upper-co-wind">—</div></div>
+            <div class="weather-item"><div class="wx-label">Precip</div><div class="wx-value" id="wx-upper-co-precip">—</div></div>
+        </div>
+        <div class="multi-gauge">
+            <div class="gauge-group">
+                <div class="gauge-name">Nr Kremmling / Pumphouse</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09058000"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09058000"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Catamount Bridge</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09060799"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09060799">Seasonal: Mar–Nov</div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Nr Kremmling / Pumphouse</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09058000"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09058000"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Catamount Bridge</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09060799"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09060799"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Nr Kremmling / Pumphouse</div>
+                <div class="data-label">Turbidity</div>
+                <div class="data-value" id="turb-09058000"><span class="loading">—</span></div>
+                <div class="data-sub" id="turb-time-09058000"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Catamount Bridge</div>
+                <div class="data-label">Turbidity</div>
+                <div class="data-value" id="turb-09060799"><span class="loading">—</span></div>
+                <div class="data-sub" id="turb-time-09060799"></div>
+            </div>
+        </div>
+        <div class="webcam-bar">
+            <span class="cam-label">📷 No public webcam available</span>
+            <a href="https://waterdata.usgs.gov/monitoring-location/09058000/" target="_blank">USGS Data ↗</a>
+        </div>
+        <div style="display:flex; gap:1px; background:var(--border);">
+            <a class="gauge-link" style="flex:1; border-radius:0 0 0 var(--radius);" href="https://waterdata.usgs.gov/monitoring-location/09058000/" target="_blank">
+                <span class="status-dot live"></span> 09058000 — Kremmling
+            </a>
+            <a class="gauge-link" style="flex:1; border-radius:0 0 var(--radius) 0;" href="https://waterdata.usgs.gov/monitoring-location/09060799/" target="_blank">
+                <span class="status-dot live"></span> 09060799 — Catamount
+            </a>
+        </div>
+    </section>
+
+    <!-- COLORADO RIVER — DOTSERO TO SILT -->
+    <section class="river-section" id="co-glenwood">
+        <div class="river-header">
+            <span class="river-icon">🏞️</span>
+            <div>
+                <h2>Colorado River</h2>
+                <span class="region">Dotsero → Glenwood Springs → Silt</span>
+            </div>
+        </div>
+        <div class="weather-bar" id="weather-co-glenwood">
+            <div class="weather-item"><div class="wx-label">Now</div><div class="wx-value" id="wx-co-glenwood-temp">—</div></div>
+            <div class="weather-item"><div class="wx-label">Wind</div><div class="wx-value" id="wx-co-glenwood-wind">—</div></div>
+            <div class="weather-item"><div class="wx-label">Precip</div><div class="wx-value" id="wx-co-glenwood-precip">—</div></div>
+        </div>
+        <div class="multi-gauge">
+            <div class="gauge-group">
+                <div class="gauge-name">Near Dotsero</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09070500"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09070500"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Below Glenwood</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09085100"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09085100"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Near Dotsero</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09070500"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09070500"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Below Glenwood</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09085100"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09085100"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Near Dotsero</div>
+                <div class="data-label">Turbidity</div>
+                <div class="data-value" id="turb-09070500"><span class="loading">—</span></div>
+                <div class="data-sub" id="turb-time-09070500"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Below Glenwood</div>
+                <div class="data-label">Turbidity</div>
+                <div class="data-value" style="font-size:1rem; color:var(--text-muted);">No sensor</div>
+                <div class="data-sub"></div>
+            </div>
+        </div>
+        <div class="webcam-bar">
+            <span class="cam-label">📷 USGS Cam — Colorado River at Glenwood</span>
+            <a href="https://apps.usgs.gov/hivis/camera/CO_Colorado_River_above_Roaring_Fork_River_at_Glenwood_Springs" target="_blank">View Cam ↗</a>
+        </div>
+        <div style="display:flex; gap:1px; background:var(--border);">
+            <a class="gauge-link" style="flex:1; border-radius:0 0 0 var(--radius);" href="https://waterdata.usgs.gov/monitoring-location/09070500/" target="_blank">
+                <span class="status-dot live"></span> 09070500 — Dotsero
+            </a>
+            <a class="gauge-link" style="flex:1; border-radius:0 0 var(--radius) 0;" href="https://waterdata.usgs.gov/monitoring-location/09085100/" target="_blank">
+                <span class="status-dot live"></span> 09085100 — Below Glenwood
+            </a>
+        </div>
+    </section>
+
+    <!-- ROARING FORK -->
+    <section class="river-section" id="roaring-fork">
+        <div class="river-header">
+            <span class="river-icon">🎣</span>
+            <div>
+                <h2>Roaring Fork River</h2>
+                <span class="region">Carbondale → Glenwood Springs (Lower Roaring Fork)</span>
+            </div>
+        </div>
+        <div class="weather-bar" id="weather-roaring-fork">
+            <div class="weather-item"><div class="wx-label">Carbondale</div><div class="wx-value" id="wx-roaring-fork-temp">—</div></div>
+            <div class="weather-item"><div class="wx-label">GWS Now</div><div class="wx-value" id="wx-roaring-fork-temp2">—</div></div>
+            <div class="weather-item"><div class="wx-label">Wind</div><div class="wx-value" id="wx-roaring-fork-wind">—</div></div>
+            <div class="weather-item"><div class="wx-label">Precip</div><div class="wx-value" id="wx-roaring-fork-precip">—</div></div>
+        </div>
+        <div class="multi-gauge">
+            <div class="gauge-group">
+                <div class="gauge-name">Nr Emma / Carbondale</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09081000"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09081000"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">At Glenwood Springs</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09085000"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09085000"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Nr Emma / Carbondale</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09081000"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09081000"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">At Glenwood Springs</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09085000"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09085000"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Nr Emma / Carbondale</div>
+                <div class="data-label">Turbidity</div>
+                <div class="data-value" style="font-size:1rem; color:var(--text-muted);">No sensor</div>
+                <div class="data-sub"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">At Glenwood Springs</div>
+                <div class="data-label">Turbidity</div>
+                <div class="data-value" id="turb-09085000"><span class="loading">—</span></div>
+                <div class="data-sub" id="turb-time-09085000"></div>
+            </div>
+        </div>
+        <div class="webcam-bar">
+            <span class="cam-label">📷 USGS Cam — Roaring Fork at Glenwood</span>
+            <a href="https://apps.usgs.gov/hivis/camera/CO_Roaring_Fork_River_at_Glenwood_Springs" target="_blank">View Cam ↗</a>
+        </div>
+        <div style="display:flex; gap:1px; background:var(--border);">
+            <a class="gauge-link" style="flex:1; border-radius:0 0 0 var(--radius);" href="https://waterdata.usgs.gov/monitoring-location/09081000/" target="_blank">
+                <span class="status-dot live"></span> 09081000 — Near Emma
+            </a>
+            <a class="gauge-link" style="flex:1; border-radius:0 0 var(--radius) 0;" href="https://waterdata.usgs.gov/monitoring-location/09085000/" target="_blank">
+                <span class="status-dot live"></span> 09085000 — At Glenwood
+            </a>
+        </div>
+    </section>
+
+    <!-- YAMPA RIVER -->
+    <section class="river-section" id="yampa">
+        <div class="river-header">
+            <span class="river-icon">🐟</span>
+            <div>
+                <h2>Yampa River</h2>
+                <span class="region">Stagecoach Tailwater → Steamboat / Chuck Lewis SWA</span>
+            </div>
+        </div>
+        <div class="weather-bar" id="weather-yampa">
+            <div class="weather-item"><div class="wx-label">Now</div><div class="wx-value" id="wx-yampa-temp">—</div></div>
+            <div class="weather-item"><div class="wx-label">Wind</div><div class="wx-value" id="wx-yampa-wind">—</div></div>
+            <div class="weather-item"><div class="wx-label">Precip</div><div class="wx-value" id="wx-yampa-precip">—</div></div>
+        </div>
+        <div class="multi-gauge">
+            <div class="gauge-group">
+                <div class="gauge-name">Stagecoach Tailwater</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09237500"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09237500"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Steamboat / Chuck Lewis</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09239500"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09239500"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Stagecoach Tailwater</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09237500"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09237500"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Steamboat / Chuck Lewis</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-09239500"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09239500"></div>
+            </div>
+        </div>
+        <div class="webcam-bar">
+            <span class="cam-label">📷 USGS Cam — Yampa at 5th St Bridge</span>
+            <a href="https://www.usgs.gov/media/webcams/yampa-river-5th-street-bridge-steamboat-springs-co-upstream-09239500" target="_blank">View Cam ↗</a>
+        </div>
+        <div style="display:flex; gap:1px; background:var(--border);">
+            <a class="gauge-link" style="flex:1; border-radius:0 0 0 var(--radius);" href="https://waterdata.usgs.gov/monitoring-location/09237500/" target="_blank">
+                <span class="status-dot live"></span> 09237500 — Below Stagecoach
+            </a>
+            <a class="gauge-link" style="flex:1; border-radius:0 0 var(--radius) 0;" href="https://waterdata.usgs.gov/monitoring-location/09239500/" target="_blank">
+                <span class="status-dot live"></span> 09239500 — At Steamboat
+            </a>
+        </div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p>Data from <a href="https://waterservices.usgs.gov/" target="_blank">USGS Water Services</a> &amp; <a href="https://www.weather.gov/" target="_blank">National Weather Service</a></p>
+    <p style="margin-top:4px;">Auto-refreshes every 15 minutes · Built for river guides</p>
+    <p style="margin-top:4px;">© 2026 CO Headwaters Report</p>
+</footer>
+
+<script>
+(function() {
+    'use strict';
+
+    // ─── CONFIGURATION ───────────────────────────────────────────────
+    const USGS_SITES = [
+        '09067020', // Eagle River at Avon/Edwards
+        '09070000', // Eagle River below Gypsum
+        '09058000', // Colorado River near Kremmling
+        '09060799', // Colorado River at Catamount Bridge
+        '09070500', // Colorado River near Dotsero
+        '09085100', // Colorado River below Glenwood Springs
+        '09081000', // Roaring Fork near Emma/Carbondale
+        '09085000', // Roaring Fork at Glenwood Springs
+        '09237500', // Yampa below Stagecoach Reservoir
+        '09239500'  // Yampa near Steamboat
+    ];
+
+    const WEATHER_LOCATIONS = [
+        { id: 'eagle',        lat: 39.6403, lon: -106.3742 },
+        { id: 'upper-co',     lat: 40.0589, lon: -106.3892 },
+        { id: 'co-glenwood',  lat: 39.5505, lon: -107.3248 },
+        { id: 'roaring-fork', lat: 39.4022, lon: -107.2112 }, // Carbondale
+        { id: 'roaring-fork2',lat: 39.5505, lon: -107.3248 }, // Glenwood
+        { id: 'yampa',        lat: 40.4850, lon: -106.8317 }
+    ];
+
+    const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes
+    const TURBIDITY_SITES = ['09058000', '09060799', '09070500', '09085000'];
+
+    // ─── USGS DATA ───────────────────────────────────────────────────
+    async function fetchUSGSData() {
+        const sites = USGS_SITES.join(',');
+        const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${sites}&parameterCd=00060,00010,63680&siteStatus=all`;
+
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`USGS API error: ${resp.status}`);
+            const data = await resp.json();
+            parseUSGSData(data);
+        } catch (err) {
+            console.error('USGS fetch failed:', err);
+            USGS_SITES.forEach(site => {
+                setElement(`flow-${site}`, '<span class="error-msg">Unavailable</span>');
+                setElement(`temp-${site}`, '<span class="error-msg">Unavailable</span>');
+            });
+        }
+    }
+
+    function parseUSGSData(data) {
+        const timeSeries = data?.value?.timeSeries || [];
+
+        timeSeries.forEach(ts => {
+            const siteCode = ts.sourceInfo?.siteCode?.[0]?.value;
+            const paramCode = ts.variable?.variableCode?.[0]?.value;
+            const values = ts.values?.[0]?.value;
+
+            if (!siteCode || !paramCode || !values?.length) return;
+
+            const latest = values[values.length - 1];
+            const val = parseFloat(latest.value);
+            const dt = new Date(latest.dateTime);
+            const timeStr = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+            if (paramCode === '00060') {
+                // Discharge (CFS)
+                const trend = computeTrend(values);
+                const trendHtml = trend === 'up' ? '<span class="trend trend-up">▲</span>'
+                    : trend === 'down' ? '<span class="trend trend-down">▼</span>'
+                    : '<span class="trend trend-stable">●</span>';
+
+                if (val < 0) {
+                    setElement(`flow-${siteCode}`, '<span class="error-msg">Ice/No Data</span>');
+                } else {
+                    setElement(`flow-${siteCode}`, `${Math.round(val).toLocaleString()} <span class="unit">cfs</span>${trendHtml}`);
+                }
+                setElement(`flow-time-${siteCode}`, `Updated ${timeStr}`);
+
+            } else if (paramCode === '00010') {
+                // Water temp (C → F)
+                if (val < -50 || isNaN(val)) {
+                    setElement(`temp-${siteCode}`, '<span class="error-msg">N/A</span>');
+                } else {
+                    const tempF = (val * 9/5 + 32).toFixed(1);
+                    setElement(`temp-${siteCode}`, `${tempF}<span class="unit">°F</span>`);
+                }
+                setElement(`temp-time-${siteCode}`, `Updated ${timeStr}`);
+
+            } else if (paramCode === '63680') {
+                // Turbidity (FNU)
+                if (isNaN(val) || val < 0) {
+                    setElement(`turb-${siteCode}`, '<span class="error-msg">N/A</span>');
+                } else {
+                    setElement(`turb-${siteCode}`, `${val.toFixed(1)} <span class="unit">FNU</span>`);
+                }
+                setElement(`turb-time-${siteCode}`, `Updated ${timeStr}`);
+            }
+        });
+
+        // Mark any sites without temp/flow data
+        USGS_SITES.forEach(site => {
+            const tempEl = document.getElementById(`temp-${site}`);
+            if (tempEl && tempEl.querySelector('.loading')) {
+                setElement(`temp-${site}`, '<span style="color:var(--text-muted); font-size:0.9rem;">Not reported</span>');
+            }
+            const flowEl = document.getElementById(`flow-${site}`);
+            if (flowEl && flowEl.querySelector('.loading')) {
+                setElement(`flow-${site}`, '<span class="error-msg">No data</span>');
+            }
+        });
+        // Mark turbidity sites that returned no data
+        TURBIDITY_SITES.forEach(site => {
+            const turbEl = document.getElementById(`turb-${site}`);
+            if (turbEl && turbEl.querySelector('.loading')) {
+                setElement(`turb-${site}`, '<span class="error-msg">No data</span>');
+            }
+        });
+    }
+
+    function computeTrend(values) {
+        if (values.length < 4) return 'stable';
+        const recent = values.slice(-4).map(v => parseFloat(v.value));
+        const first = recent[0];
+        const last = recent[recent.length - 1];
+        const pctChange = ((last - first) / Math.max(first, 1)) * 100;
+        if (pctChange > 3) return 'up';
+        if (pctChange < -3) return 'down';
+        return 'stable';
+    }
+
+    // ─── NWS WEATHER ─────────────────────────────────────────────────
+    async function fetchWeather(loc) {
+        const headers = { 'User-Agent': 'COHeadwatersReport (coheadwatersreport.com)' };
+        try {
+            // Step 1: Get grid point info
+            const pointsResp = await fetch(`https://api.weather.gov/points/${loc.lat},${loc.lon}`, { headers });
+            if (!pointsResp.ok) throw new Error(`NWS points error: ${pointsResp.status}`);
+            const pointsData = await pointsResp.json();
+            const stationsUrl = pointsData.properties?.observationStations;
+            const forecastUrl = pointsData.properties?.forecast;
+
+            let obsTemp = null;
+            let obsWind = null;
+            let obsWindDir = '';
+            let obsDesc = '';
+
+            // Step 2: Try to get current observation from nearest station
+            if (stationsUrl) {
+                try {
+                    const stationsResp = await fetch(stationsUrl, { headers });
+                    if (stationsResp.ok) {
+                        const stationsData = await stationsResp.json();
+                        // Try up to 3 nearest stations in case first has no data
+                        const stations = stationsData.features?.slice(0, 3) || [];
+                        for (const station of stations) {
+                            const stationId = station?.properties?.stationIdentifier;
+                            if (!stationId) continue;
+                            try {
+                                const obsResp = await fetch(`https://api.weather.gov/stations/${stationId}/observations/latest`, { headers });
+                                if (!obsResp.ok) continue;
+                                const obsData = await obsResp.json();
+                                const obs = obsData.properties;
+                                const tempC = obs?.temperature?.value;
+                                if (tempC != null) {
+                                    obsTemp = Math.round(tempC * 9/5 + 32);
+                                    const windMs = obs?.windSpeed?.value;
+                                    obsWind = windMs != null ? Math.round(windMs * 2.237) : null;
+                                    const windDeg = obs?.windDirection?.value;
+                                    obsWindDir = windDeg != null ? degToCompass(windDeg) : '';
+                                    obsDesc = obs?.textDescription || '';
+                                    break; // Got good data, stop trying stations
+                                }
+                            } catch (e) { continue; }
+                        }
+                    }
+                } catch (e) { /* observation failed, will fall back to forecast */ }
+            }
+
+            // Step 3: Get forecast (for precip chance, and as temp fallback)
+            let forecastTemp = null;
+            let forecastWind = '—';
+            let forecastWindDir = '';
+            let precipChance = '—';
+            if (forecastUrl) {
+                try {
+                    const forecastResp = await fetch(forecastUrl, { headers });
+                    if (forecastResp.ok) {
+                        const forecastData = await forecastResp.json();
+                        const period = forecastData.properties?.periods?.[0];
+                        if (period) {
+                            precipChance = (period.probabilityOfPrecipitation?.value ?? 0) + '%';
+                            forecastTemp = period.temperature;
+                            forecastWind = period.windSpeed || '—';
+                            forecastWindDir = period.windDirection || '';
+                        }
+                    }
+                } catch (e) { /* forecast optional */ }
+            }
+
+            // Use observation if available, otherwise fall back to forecast
+            const finalTemp = obsTemp != null ? obsTemp + '°F' : (forecastTemp != null ? forecastTemp + '°F' : '—');
+            const finalWind = obsWind != null ? obsWind + ' mph' : forecastWind;
+            const finalWindDir = obsWindDir || forecastWindDir;
+
+            return {
+                temp: finalTemp,
+                wind: finalWind,
+                windDir: finalWindDir,
+                precip: precipChance,
+                description: obsDesc
+            };
+        } catch (err) {
+            console.warn(`Weather fetch failed for ${loc.id}:`, err);
+            return null;
+        }
+    }
+
+    function degToCompass(deg) {
+        const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+        return dirs[Math.round(deg / 22.5) % 16];
+    }
+
+    async function fetchAllWeather() {
+        const results = await Promise.allSettled(
+            WEATHER_LOCATIONS.map(loc => fetchWeather(loc))
+        );
+
+        WEATHER_LOCATIONS.forEach((loc, i) => {
+            const wx = results[i].status === 'fulfilled' ? results[i].value : null;
+            updateWeatherUI(loc.id, wx);
+        });
+    }
+
+    function updateWeatherUI(locId, wx) {
+        if (locId === 'roaring-fork2') {
+            // Second weather location for Roaring Fork (Glenwood end)
+            const el = document.getElementById('wx-roaring-fork-temp2');
+            if (el) el.textContent = wx ? wx.temp : '—';
+            return;
+        }
+
+        const tempEl = document.getElementById(`wx-${locId}-temp`);
+        const windEl = document.getElementById(`wx-${locId}-wind`);
+        const precipEl = document.getElementById(`wx-${locId}-precip`);
+
+        if (wx) {
+            if (tempEl) tempEl.textContent = wx.temp;
+            if (windEl) {
+                windEl.textContent = wx.wind;
+                windEl.insertAdjacentHTML('afterend',
+                    `<div class="wx-detail">${wx.windDir}</div>`);
+            }
+            if (precipEl) precipEl.textContent = wx.precip;
+        } else {
+            if (tempEl) tempEl.textContent = '—';
+            if (windEl) windEl.textContent = '—';
+            if (precipEl) precipEl.textContent = '—';
+        }
+    }
+
+    // ─── UTILITIES ───────────────────────────────────────────────────
+    function setElement(id, html) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
+    }
+
+    function updateTimestamp() {
+        const now = new Date();
+        const timeStr = now.toLocaleString('en-US', {
+            weekday: 'short', month: 'short', day: 'numeric',
+            hour: 'numeric', minute: '2-digit'
+        });
+        setElement('lastUpdated', `Last refreshed: ${timeStr}`);
+    }
+
+    // ─── NAV HIGHLIGHTING ────────────────────────────────────────────
+    function setupNavHighlighting() {
+        const sections = document.querySelectorAll('.river-section');
+        const navLinks = document.querySelectorAll('.river-nav a');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    const activeLink = document.querySelector(`.river-nav a[href="#${entry.target.id}"]`);
+                    if (activeLink) activeLink.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-120px 0px -60% 0px' });
+
+        sections.forEach(section => observer.observe(section));
+    }
+
+    // ─── MAIN ────────────────────────────────────────────────────────
+    window.refreshAll = async function() {
+        document.getElementById('lastUpdated').textContent = 'Refreshing...';
+
+        // Clear old wind direction details to avoid duplicates
+        document.querySelectorAll('.wx-detail').forEach(el => el.remove());
+
+        await Promise.all([fetchUSGSData(), fetchAllWeather()]);
+        updateTimestamp();
+    };
+
+    // Initial load
+    refreshAll();
+    setupNavHighlighting();
+
+    // Auto-refresh
+    setInterval(refreshAll, REFRESH_INTERVAL);
+
+})();
+</script>
+
+</body>
+</html>
