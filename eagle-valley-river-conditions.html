@@ -284,7 +284,7 @@ footer a:hover { text-decoration: underline; }
       <div class="reg-error" id="errType">Please select an option.</div>
     </div>
     <button class="btn-enter" onclick="submitReg()">Access River Conditions →</button>
-    <div class="reg-privacy">🔒 Stored in your browser session only — never shared.</div>
+    <div class="reg-privacy">🔒 Stored in your browser session only, never shared.</div>
   </div>
 </div>
 
@@ -335,7 +335,7 @@ const RIVERS = [
     color: '#34d399',
     bgColor: 'rgba(52,211,153,0.08)',
     borderColor: 'rgba(52,211,153,0.25)',
-    description: 'Gold medal water — Minturn through Eagle Valley to Gypsum',
+    description: 'Gold medal water from Minturn through Eagle Valley to Gypsum',
     sections: [
       {
         name: 'Minturn (Upper — C&R)',
@@ -376,7 +376,7 @@ const RIVERS = [
         name: 'Pumphouse → State Bridge',
         site: '09058000',
         floatInfo: '🚣 Classic guide float — ~16 miles, Class I–II. Put-in: Pumphouse campground. Take-out: State Bridge.',
-        fishingNote: 'Trophy browns & rainbows in the Ranches section. Gore Canyon is upstream Class IV–V — expert only. The Pumphouse–State Bridge corridor is the premier Upper Colorado guide run.',
+        fishingNote: 'Trophy browns & rainbows in the Ranches section. Gore Canyon is upstream Class IV–V, expert only. The Pumphouse–State Bridge corridor is the premier Upper Colorado guide run.',
         flowThresholds: { low: 350, high: 3000 },
         tempThresholds: { cold: 45, warm: 65, hot: 73 }
       },
@@ -392,7 +392,7 @@ const RIVERS = [
         name: 'State Bridge → Dotsero',
         site: '09060799',
         floatInfo: '🚣 Full-day or 2-day float. Put-in: State Bridge. Take-out: Dotsero (I-70 exit).',
-        fishingNote: 'Long canyon corridor with remote feel. Big fish water — streamers and nymphs. Catamount Bridge gauge sits mid-run and gives a reliable read on this stretch.',
+        fishingNote: 'Long canyon corridor with remote feel. Big fish water: streamers and nymphs. Catamount Bridge gauge sits mid-run and gives a reliable read on this stretch.',
         flowThresholds: { low: 350, high: 3000 },
         tempThresholds: { cold: 45, warm: 65, hot: 73 }
       },
@@ -400,7 +400,7 @@ const RIVERS = [
         name: 'Below Glenwood Springs',
         site: '09085100',
         floatInfo: '🚣 Excellent float water below Glenwood — full day runs',
-        fishingNote: 'Below the Roaring Fork confluence — big combined flows. Great streamer water. Multiple access points. Popular commercial float corridor in summer.',
+        fishingNote: 'Below the Roaring Fork confluence, big combined flows. Great streamer water. Multiple access points. Popular commercial float corridor in summer.',
         flowThresholds: { low: 800, high: 6000 },
         tempThresholds: { cold: 45, warm: 65, hot: 74 }
       }
@@ -448,13 +448,13 @@ const RIVERS = [
     color: '#38bdf8',
     bgColor: 'rgba(56,189,248,0.08)',
     borderColor: 'rgba(56,189,248,0.25)',
-    description: 'Wild trout fishery — Steamboat Springs through the Flat Tops country',
+    description: 'Wild trout fishery from Steamboat Springs through the Flat Tops country',
     sections: [
       {
         name: 'Steamboat Springs (Town Reach)',
         site: '09239500',
         floatInfo: '🚣 Town float — put-in near 5th Street Bridge, multiple take-outs downstream',
-        fishingNote: 'Gold medal trout water through Steamboat Springs. World-class brown and rainbow trout. Outstanding dry fly fishing in summer — stoneflies, PMDs, and caddis. One of Colorado\'s premier guided wade and float fisheries.',
+        fishingNote: 'Gold medal trout water through Steamboat Springs. World-class brown and rainbow trout. Outstanding dry fly fishing in summer: stoneflies, PMDs, and caddis. One of Colorado\'s premier guided wade and float fisheries.',
         flowThresholds: { low: 200, high: 3500 },
         tempThresholds: { cold: 45, warm: 65, hot: 72 }
       },
@@ -486,7 +486,7 @@ const WEBCAMS = [
     name: 'Gore Creek Fish Cam — Vail (Eagle River tributary)',
     url: 'https://www.vail.gov/visiting/live-webcams/gore-creek-fish-cam',
     directLink: 'https://www.vail.gov/visiting/live-webcams/gore-creek-fish-cam',
-    note: 'Underwater fish cam on Gore Creek in Vail — a Gold Medal tributary of the Eagle River. Run by the Town of Vail. If it doesn\'t load in the frame, click "Open directly" for the live stream.'
+    note: 'Underwater fish cam on Gore Creek in Vail, a Gold Medal tributary of the Eagle River. Run by the Town of Vail. If it doesn\'t load in the frame, click "Open directly" for the live stream.'
   },
   {
     river: 'Colorado River',
@@ -597,9 +597,9 @@ async function fetchWithTimeout(url, timeoutMs=12000) {
   } catch(e) {
     clearTimeout(timer);
     if (e.name === 'AbortError')
-      throw new Error(`Timed out after ${timeoutMs/1000}s — USGS may be slow, try Refresh`);
+      throw new Error(`Timed out after ${timeoutMs/1000}s. USGS may be slow, try Refresh`);
     if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('Load failed') || e.message.includes('fetch'))
-      throw new Error(`Network blocked — open this file in Chrome or Safari directly (not through Claude's viewer)`);
+      throw new Error(`Network blocked. Open this file in Chrome or Safari directly (not through Claude's viewer)`);
     throw e;
   }
 }
@@ -645,7 +645,7 @@ async function fetchAllUSGS() {
     } catch(e) { /* skip this site */ }
   }));
 
-  return { data: result, error: anySuccess ? null : 'Unable to reach USGS — check your internet connection' };
+  return { data: result, error: anySuccess ? null : 'Unable to reach USGS. Check your internet connection' };
 }
 
 function parseUSGS(json) {
@@ -724,11 +724,11 @@ function clarityStatus(fnu) {
 function seasonNote() {
   const m = new Date().getMonth()+1;
   if (m<=2||m===12) return {i:'❄️',  t:'<strong>Winter:</strong> Cold, clear water with low flows. Midges &amp; BWOs dominate. Nymph deep in slow pools. Watch for ice on banks.'};
-  if (m<=4)         return {i:'🌡️', t:'<strong>Pre-Runoff:</strong> Snowmelt beginning — watch for rapid flow increases. Nymphing and midges productive. Flows can blow out quickly.'};
+  if (m<=4)         return {i:'🌡️', t:'<strong>Pre-Runoff:</strong> Snowmelt beginning. Watch for rapid flow increases. Nymphing and midges productive. Flows can blow out quickly.'};
   if (m<=6)         return {i:'🏔️', t:'<strong>Peak Runoff:</strong> High water likely on most rivers. Focus on clear tributaries or wait for post-runoff clarity. Big streamers can produce trophy fish.'};
-  if (m<=8)         return {i:'☀️',  t:'<strong>Summer:</strong> Prime hatch season. Watch water temps — if above 68°F, fish early morning or evening only. PMDs, caddis, terrestrials.'};
-  if (m<=10)        return {i:'🍂', t:'<strong>Fall:</strong> Exceptional dry fly fishing. Browns spawn in October — handle with extra care. BWOs dominant. Best clarity of the year.'};
-  return                  {i:'❄️',  t:'<strong>Late Fall:</strong> Transitioning to winter. Midges &amp; streamers. Fewer crowds. Water temps dropping — fish getting lethargic.'};
+  if (m<=8)         return {i:'☀️',  t:'<strong>Summer:</strong> Prime hatch season. Watch water temps: if above 68°F, fish early morning or evening only. PMDs, caddis, terrestrials.'};
+  if (m<=10)        return {i:'🍂', t:'<strong>Fall:</strong> Exceptional dry fly fishing. Browns spawn in October, handle with extra care. BWOs dominant. Best clarity of the year.'};
+  return                  {i:'❄️',  t:'<strong>Late Fall:</strong> Transitioning to winter. Midges &amp; streamers. Fewer crowds. Water temps dropping, fish getting lethargic.'};
 }
 
 // ════════════════════════════════════════════
@@ -920,7 +920,7 @@ async function refresh() {
   } catch(e) {
     lastError = e.message;
     if (activeTab === 'river') renderRiver();
-    document.getElementById('lastUpdated').textContent = '⚠ Update failed — tap Refresh';
+    document.getElementById('lastUpdated').textContent = '⚠ Update failed. Tap Refresh';
   }
 
   btn.classList.remove('loading');
