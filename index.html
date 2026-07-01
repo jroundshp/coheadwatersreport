@@ -394,7 +394,7 @@
             <span class="river-icon">🏔️</span>
             <div>
                 <h2>Eagle River</h2>
-                <span class="region">Avon / Edwards / Gypsum</span>
+                <span class="region">Minturn / Avon / Gypsum</span>
             </div>
         </div>
         <div class="weather-bar" id="weather-eagle">
@@ -403,6 +403,12 @@
             <div class="weather-item"><div class="wx-label">Precip</div><div class="wx-value" id="wx-eagle-precip">—</div></div>
         </div>
         <div class="multi-gauge">
+            <div class="gauge-group">
+                <div class="gauge-name">Minturn (Upper)</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-09064600"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-09064600"></div>
+            </div>
             <div class="gauge-group">
                 <div class="gauge-name">Avon / Edwards</div>
                 <div class="data-label">Flow (CFS)</div>
@@ -416,16 +422,10 @@
                 <div class="data-sub" id="flow-time-09070000"></div>
             </div>
             <div class="gauge-group">
-                <div class="gauge-name">Avon / Edwards</div>
+                <div class="gauge-name">Minturn (Upper)</div>
                 <div class="data-label">Water Temp</div>
-                <div class="data-value" id="temp-09067020"><span class="loading">—</span></div>
-                <div class="data-sub" id="temp-time-09067020"></div>
-            </div>
-            <div class="gauge-group">
-                <div class="gauge-name">Below Gypsum</div>
-                <div class="data-label">Water Temp</div>
-                <div class="data-value" id="temp-09070000"><span class="loading">—</span></div>
-                <div class="data-sub" id="temp-time-09070000"></div>
+                <div class="data-value" id="temp-09064600"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-09064600"></div>
             </div>
         </div>
         <div class="webcam-bar">
@@ -433,7 +433,10 @@
             <a href="https://www.cotrip.org/map#/camera?camera=10347&zoom=15" target="_blank">View Cam ↗</a>
         </div>
         <div style="display:flex; gap:1px; background:var(--border);">
-            <a class="gauge-link" style="flex:1; border-radius:0 0 0 var(--radius);" href="https://waterdata.usgs.gov/monitoring-location/09067020/" target="_blank">
+            <a class="gauge-link" style="flex:1; border-radius:0 0 0 var(--radius);" href="https://waterdata.usgs.gov/monitoring-location/09064600/" target="_blank">
+                <span class="status-dot live"></span> 09064600 — Minturn
+            </a>
+            <a class="gauge-link" style="flex:1;" href="https://waterdata.usgs.gov/monitoring-location/09067020/" target="_blank">
                 <span class="status-dot live"></span> 09067020 — Avon
             </a>
             <a class="gauge-link" style="flex:1; border-radius:0 0 var(--radius) 0;" href="https://waterdata.usgs.gov/monitoring-location/09070000/" target="_blank">
@@ -710,6 +713,7 @@
 
     // ─── CONFIGURATION ───────────────────────────────────────────────
     const USGS_SITES = [
+        '09064600', // Eagle River near Minturn (flow + water temp)
         '09067020', // Eagle River at Avon/Edwards
         '09070000', // Eagle River below Gypsum
         '09058000', // Colorado River near Kremmling
