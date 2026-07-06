@@ -394,7 +394,7 @@
             <span class="river-icon">🏔️</span>
             <div>
                 <h2>Eagle River</h2>
-                <span class="region">Minturn / Avon / Gypsum</span>
+                <span class="region">Minturn / Avon / Wolcott / Gypsum</span>
             </div>
         </div>
         <div class="weather-bar" id="weather-eagle">
@@ -416,6 +416,12 @@
                 <div class="data-sub" id="flow-time-09067020"></div>
             </div>
             <div class="gauge-group">
+                <div class="gauge-name">Below Milk Cr / Wolcott</div>
+                <div class="data-label">Flow (CFS)</div>
+                <div class="data-value" id="flow-394220106431500"><span class="loading">—</span></div>
+                <div class="data-sub" id="flow-time-394220106431500"></div>
+            </div>
+            <div class="gauge-group">
                 <div class="gauge-name">Below Gypsum</div>
                 <div class="data-label">Flow (CFS)</div>
                 <div class="data-value" id="flow-09070000"><span class="loading">—</span></div>
@@ -426,6 +432,12 @@
                 <div class="data-label">Water Temp</div>
                 <div class="data-value" id="temp-09064600"><span class="loading">—</span></div>
                 <div class="data-sub" id="temp-time-09064600"></div>
+            </div>
+            <div class="gauge-group">
+                <div class="gauge-name">Below Milk Cr / Wolcott</div>
+                <div class="data-label">Water Temp</div>
+                <div class="data-value" id="temp-394220106431500"><span class="loading">—</span></div>
+                <div class="data-sub" id="temp-time-394220106431500"></div>
             </div>
         </div>
         <div class="webcam-bar">
@@ -438,6 +450,9 @@
             </a>
             <a class="gauge-link" style="flex:1;" href="https://waterdata.usgs.gov/monitoring-location/09067020/" target="_blank">
                 <span class="status-dot live"></span> 09067020 — Avon
+            </a>
+            <a class="gauge-link" style="flex:1;" href="https://waterdata.usgs.gov/monitoring-location/USGS-394220106431500/" target="_blank">
+                <span class="status-dot live"></span> Wolcott
             </a>
             <a class="gauge-link" style="flex:1; border-radius:0 0 var(--radius) 0;" href="https://waterdata.usgs.gov/monitoring-location/09070000/" target="_blank">
                 <span class="status-dot live"></span> 09070000 — Gypsum
@@ -715,6 +730,7 @@
     const USGS_SITES = [
         '09064600', // Eagle River near Minturn (flow + water temp)
         '09067020', // Eagle River at Avon/Edwards
+        '394220106431500', // Eagle River below Milk Creek near Wolcott
         '09070000', // Eagle River below Gypsum
         '09058000', // Colorado River near Kremmling
         '09060799', // Colorado River at Catamount Bridge
