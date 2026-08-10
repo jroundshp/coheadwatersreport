@@ -33,56 +33,10 @@ body {
 }
 
 /* ── REGISTRATION OVERLAY ─────────────────── */
-#regOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(5,10,18,0.97);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
 
-.reg-card {
-  background: #0d1826;
-  border: 1px solid #1e3a55;
-  border-radius: 16px;
-  padding: 40px 36px;
-  max-width: 440px;
-  width: 100%;
-  text-align: center;
-}
 
-.reg-hero { font-size: 48px; margin-bottom: 12px; }
-.reg-title { font-size: 22px; font-weight: 800; color: #7dd3fc; margin-bottom: 6px; }
-.reg-subtitle { font-size: 13px; color: var(--text-dim); margin-bottom: 28px; line-height: 1.6; }
 
-.reg-field { margin-bottom: 14px; text-align: left; }
-.reg-field label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); margin-bottom: 6px; }
-.reg-field input,
-.reg-field select {
-  width: 100%; background: #0a1522; border: 1px solid #1e3a55; border-radius: 8px;
-  color: var(--text-bright); font-family: inherit; font-size: 14px; padding: 10px 14px;
-  outline: none; transition: border-color 0.2s; -webkit-appearance: none; appearance: none;
-}
-.reg-field input::placeholder { color: #3a5a78; }
-.reg-field input:focus, .reg-field select:focus { border-color: #2e7db8; }
-.reg-field select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b8fa8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer;
-}
-.reg-field select option { background: #0d1826; }
-.reg-error { font-size: 12px; color: #f87171; margin-top: 4px; display: none; }
 
-.btn-enter {
-  width: 100%; background: linear-gradient(135deg,#1d5a8a,#2575aa); border: none;
-  border-radius: 10px; color: #e0f2fe; font-family: inherit; font-size: 15px; font-weight: 700;
-  padding: 13px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s,transform 0.1s; letter-spacing: 0.3px;
-}
-.btn-enter:hover { opacity: 0.9; transform: translateY(-1px); }
-.btn-enter:active { transform: translateY(0); }
-.reg-privacy { font-size: 10px; color: #3a5a78; margin-top: 14px; }
 
 /* ── HEADER ─────────────────────────────── */
 .header {
@@ -242,8 +196,7 @@ footer a:hover { text-decoration: underline; }
   .sections-grid { grid-template-columns: 1fr; }
   .data-value { font-size: 18px; }
   .river-summary { flex-direction: column; align-items: flex-start; }
-  .reg-card { padding: 28px 20px; }
-}
+  }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .fade-in { animation: fadeIn 0.3s ease; }
@@ -254,42 +207,6 @@ footer a:hover { text-decoration: underline; }
 </head>
 <body>
 
-<!-- ══ REGISTRATION OVERLAY ══════════════════ -->
-<div id="regOverlay">
-  <div class="reg-card">
-    <div class="reg-hero">🎣</div>
-    <div class="reg-title">CO Headwaters Report</div>
-    <div class="reg-subtitle">
-      Real-time flows, temps &amp; clarity for the Eagle River,
-      Colorado River, Roaring Fork &amp; Yampa.<br>
-      <span style="color:#4a7a9b;">Quick one-time sign-in to access the dashboard.</span>
-    </div>
-    <div class="reg-field">
-      <label>Your Name</label>
-      <input type="text" id="regName" placeholder="e.g. Jake Rivers" autocomplete="name">
-      <div class="reg-error" id="errName">Please enter your name.</div>
-    </div>
-    <div class="reg-field">
-      <label>Email Address</label>
-      <input type="email" id="regEmail" placeholder="e.g. jake@outfitters.com" autocomplete="email">
-      <div class="reg-error" id="errEmail">Please enter a valid email.</div>
-    </div>
-    <div class="reg-field">
-      <label>I Am A…</label>
-      <select id="regType">
-        <option value="" disabled selected>Select your guide type</option>
-        <option value="fly-fishing">Fly Fishing Guide</option>
-        <option value="river">River / Float Guide</option>
-        <option value="both">Fly Fishing &amp; Float Guide</option>
-        <option value="angler">Independent Angler</option>
-        <option value="other">Other / Just Checking Flows</option>
-      </select>
-      <div class="reg-error" id="errType">Please select an option.</div>
-    </div>
-    <button class="btn-enter" onclick="submitReg()">Access River Conditions →</button>
-    <div class="reg-privacy">🔒 Stored in your browser session only, never shared.</div>
-  </div>
-</div>
 
 <!-- ══ MAIN APP ══════════════════════════════ -->
 <header class="header">
@@ -301,7 +218,6 @@ footer a:hover { text-decoration: underline; }
     </div>
   </div>
   <div class="header-right">
-    <div class="user-badge" id="userBadge"></div>
     <span class="last-updated" id="lastUpdated">Fetching data…</span>
     <button class="btn-refresh" id="refreshBtn" onclick="refresh()">↻ Refresh</button>
   </div>
@@ -543,48 +459,12 @@ let webcamsLoaded = false;
 let riverData    = {};
 let weatherData  = [];
 let isLoading    = false;
-let currentUser  = null;
 let lastError    = null;
 
 // ════════════════════════════════════════════
 // REGISTRATION
 // ════════════════════════════════════════════
 
-const GUIDE_LABELS = {
-  'fly-fishing':'Fly Fishing Guide','river':'River / Float Guide',
-  'both':'Fly Fishing & Float Guide','angler':'Independent Angler','other':'Guest'
-};
-
-function submitReg() {
-  const name  = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const type  = document.getElementById('regType').value;
-  let valid = true;
-  ['errName','errEmail','errType'].forEach(id => document.getElementById(id).style.display='none');
-  if (!name)                              { document.getElementById('errName').style.display='block';  valid=false; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('errEmail').style.display='block'; valid=false; }
-  if (!type)                              { document.getElementById('errType').style.display='block';  valid=false; }
-  if (!valid) return;
-  currentUser = { name, email, type };
-  try { sessionStorage.setItem('evrc_user', JSON.stringify(currentUser)); } catch(e) {}
-  showApp();
-  refresh();
-}
-
-function showApp() {
-  document.getElementById('regOverlay').style.display = 'none';
-  const badge = document.getElementById('userBadge');
-  badge.textContent = `👤 ${currentUser.name.split(' ')[0]} · ${GUIDE_LABELS[currentUser.type]||currentUser.type}`;
-  badge.style.display = 'inline-block';
-}
-
-function checkExistingSession() {
-  try {
-    const saved = sessionStorage.getItem('evrc_user');
-    if (saved) { currentUser = JSON.parse(saved); showApp(); return true; }
-  } catch(e) {}
-  return false;
-}
 
 // ════════════════════════════════════════════
 // DATA FETCHING  — robust with timeout + retry
@@ -939,8 +819,8 @@ async function refresh() {
 function init() {
   renderTabs();
   renderRiver();
-  if (checkExistingSession()) refresh();
-  setInterval(() => { if (currentUser) refresh(); }, 15*60*1000);
+  refresh();
+  setInterval(refresh, 15*60*1000);
 }
 
 init();
