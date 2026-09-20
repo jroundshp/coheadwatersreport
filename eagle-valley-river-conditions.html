@@ -234,7 +234,7 @@ footer a:hover { text-decoration: underline; }
 </main>
 
 <footer>
-  <div>📊 River data: <a href="https://waterservices.usgs.gov" target="_blank">USGS National Water Information System</a> (real-time stream gauges)</div>
+  <div>📊 River data: <a href="https://waterdata.usgs.gov" target="_blank">USGS National Water Information System</a> (real-time stream gauges)</div>
   <div>🌤 Weather: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
   <div>🔄 Auto-refreshes every 15 minutes</div>
   <div style="margin-top:8px;font-size:10px;color:#2a4a62;">⚠️ Always verify conditions locally. River data can change rapidly. Not a substitute for on-water judgment.</div>
@@ -497,62 +497,92 @@ async function fetchWithRetry(url, attempts=2, timeoutMs=12000) {
   throw lastErr;
 }
 
-async function fetchAllUSGS() {
-  const allSites = [...new Set(RIVERS.flatMap(r => r.sections.map(s => s.site)))];
-  // Try primary URL first, fall back to alternate
-  const urls = [
-    `https://waterservices.usgs.gov/nwis/iv/?sites=${allSites.join(',')}&parameterCd=00060,00010,63680&format=json`,
-    `https://waterservices.usgs.gov/nwis/iv/?sites=${allSites.join(',')}&parameterCd=00060,00010&format=json`
-  ];
+// USGS's legacy waterservices.usgs.gov/nwis/iv endpoint 503s a large
+// share of the time. These read the current OGC API instead, which is
+// CORS-enabled and answers in well under a second.
+const USGS_API = 'https://api.waterdata.usgs.gov/ogcapi/v0/collections';
+const USGS_PARAMS = "'00060','00010','63680'";
 
-  for (const url of urls) {
-    try {
-      const json = await fetchWithRetry(url, 2, 14000);
-      const parsed = parseUSGS(json);
-      if (Object.keys(parsed).length > 0) return { data: parsed, error: null };
-    } catch(e) {
-      lastError = e.message;
-      continue;
-    }
-  }
+// Resolved once per session: a few gauges report the same parameter
+// from two probes, so we need to know which series to believe.
+let seriesMeta = null;
 
-  // If batch fails, try fetching sites individually (fallback)
-  const result = {};
-  let anySuccess = false;
-  await Promise.allSettled(allSites.map(async site => {
-    try {
-      const url = `https://waterservices.usgs.gov/nwis/iv/?sites=${site}&parameterCd=00060,00010&format=json`;
-      const json = await fetchWithTimeout(url, 10000);
-      const parsed = parseUSGS(json);
-      Object.assign(result, parsed);
-      anySuccess = true;
-    } catch(e) { /* skip this site */ }
-  }));
-
-  return { data: result, error: anySuccess ? null : 'Unable to reach USGS. Check your internet connection' };
+function usgsFilter(sites, extra) {
+  const ids = sites.map(s => `'USGS-${s}'`).join(',');
+  return encodeURIComponent(`monitoring_location_id IN (${ids}) AND ${extra}`);
 }
 
-function parseUSGS(json) {
+async function loadSeriesMeta(sites) {
+  if (seriesMeta) return seriesMeta;
+  const url = `${USGS_API}/time-series-metadata/items?f=json&limit=1000`
+    + `&filter=${usgsFilter(sites, `parameter_code IN (${USGS_PARAMS})`)}`;
+  const json = await fetchWithRetry(url, 2, 12000);
+  const map = {};
+  (json.features || []).forEach(f => {
+    const p = f.properties || {};
+    if (p.id) map[p.id] = { sub: p.sublocation_identifier || null, begin: p.begin_utc || '9999' };
+  });
+  seriesMeta = map;
+  return map;
+}
+
+// Prefer a probe with no sublocation, then the longest-running one.
+// Matches what the old NWIS endpoint served for these gauges.
+function preferSeries(candidates, meta) {
+  return candidates.slice().sort((a, b) => {
+    const ma = meta[a.seriesId] || {}, mb = meta[b.seriesId] || {};
+    const subA = ma.sub ? 1 : 0, subB = mb.sub ? 1 : 0;
+    if (subA !== subB) return subA - subB;
+    const beginA = ma.begin || '9999', beginB = mb.begin || '9999';
+    if (beginA !== beginB) return beginA < beginB ? -1 : 1;
+    return a.seriesId < b.seriesId ? -1 : 1;
+  })[0];
+}
+
+async function fetchAllUSGS() {
+  const allSites = [...new Set(RIVERS.flatMap(r => r.sections.map(s => s.site)))];
+  const url = `${USGS_API}/latest-continuous/items?f=json&limit=500`
+    + `&filter=${usgsFilter(allSites, `parameter_code IN (${USGS_PARAMS})`)}`;
+
+  let json;
+  try {
+    json = await fetchWithRetry(url, 3, 14000);
+  } catch(e) {
+    return { data: {}, error: e.message };
+  }
+
+  // Metadata only disambiguates duplicate probes; never fail on it.
+  let meta = {};
+  try {
+    meta = await loadSeriesMeta(allSites);
+  } catch(e) { /* fall back to a stable pick below */ }
+
+  const parsed = parseUSGS(json, meta);
+  if (Object.keys(parsed).length === 0) {
+    return { data: {}, error: 'USGS returned no readings for these gauges' };
+  }
+  return { data: parsed, error: null };
+}
+
+function parseUSGS(json, meta = {}) {
+  const grouped = {};
+  for (const f of (json?.features || [])) {
+    const p = f.properties || {};
+    const site  = (p.monitoring_location_id || '').replace('USGS-', '');
+    const param = p.parameter_code;
+    const num   = parseFloat(p.value);
+    // Negative readings mean ice or a fouled probe, not a level.
+    if (!site || !param || isNaN(num) || num < 0) continue;
+    const key = `${site}|${param}`;
+    (grouped[key] = grouped[key] || []).push({ value: num, dateTime: p.time, seriesId: p.time_series_id });
+  }
+
   const result = {};
-  const ts = json?.value?.timeSeries;
-  if (!ts || !ts.length) return result;
-  for (const series of ts) {
-    const site  = series.sourceInfo?.siteCode?.[0]?.value;
-    const param = series.variable?.variableCode?.[0]?.value;
-    const noVal = series.variable?.noDataValue;
-    const vals  = series.values?.[0]?.value;
-    if (!site || !param || !vals?.length) continue;
+  for (const key of Object.keys(grouped)) {
+    const [site, param] = key.split('|');
+    const best = preferSeries(grouped[key], meta);
     if (!result[site]) result[site] = {};
-    let found = null;
-    for (let i = vals.length-1; i >= 0; i--) {
-      const raw = vals[i]?.value;
-      const num = parseFloat(raw);
-      if (raw != null && raw !== '' && !isNaN(num) && num !== noVal && num >= 0) {
-        found = { value: num, dateTime: vals[i].dateTime };
-        break;
-      }
-    }
-    result[site][param] = found;
+    result[site][param] = { value: best.value, dateTime: best.dateTime };
   }
   return result;
 }
