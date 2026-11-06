@@ -1,0 +1,10 @@
+# CO Headwaters Report
+
+> Real-time river flows, water temps, webcams, and weather for Eagle River, Upper Colorado, Roaring Fork, Colorado River, and Yampa River near Vail, CO.
+
+## Pages
+
+- [CO Headwaters Report — River Conditions for Guides](https://coheadwatersreport.com/): Real-time river flows, water temps, webcams, and weather for Eagle River, Upper Colorado, Roaring Fork, Colorado River, and Yampa River near Vail, CO.
+- [Eagle Valley River Conditions: Flows & Water Temps by Reach](https://coheadwatersreport.com/eagle-valley-river-conditions.html): Live flows and water temperatures for every reach of the Eagle River, Colorado River, Roaring Fork and Yampa, from Minturn to Dotsero. Built for guides and anglers.
+
+Sitemap: https://coheadwatersreport.com/sitemap.xml
